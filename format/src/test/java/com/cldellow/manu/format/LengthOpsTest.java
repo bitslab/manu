@@ -53,7 +53,15 @@ public class LengthOpsTest {
 
 
     @Property
-    public void decodeIdAnyLen(@InRange(min = "0", max = "63") int id, @InRange(min = "0") int len) {
+    public void decodeIdAnyLen(@InRange(min = "0", max = "63") int id, @InRange(min = "0", max = "254") int smallLen, @InRange(min = "255", max = "65534") int mediumLen,  @InRange(min = "65535") int largeLen,  @InRange(min = "0", max = "2") int lenSelect) {
+        int len;
+
+        switch (lenSelect) {
+            case 2: len = largeLen;  break;
+            case 1: len = mediumLen; break;
+            case 0: len = smallLen;  break;
+            default: throw new Error("Dead code");
+        }
         byte encoded = LengthOps.encode((byte) id, len);
         assertEquals(id, LengthOps.decodeId(encoded));
 

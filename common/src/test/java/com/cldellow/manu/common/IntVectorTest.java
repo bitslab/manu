@@ -62,8 +62,8 @@ public class IntVectorTest {
     }
 
     @Property
-    public void testLikeArray(int[] ints) {
-        IntVector iv = new IntVector();
+    public void testLikeArray(int[] ints, boolean grow) {
+        IntVector iv = grow ? new IntVector(1) : new IntVector();
         for (int i = 0; i < ints.length; i++) {
             assertEquals(i, iv.getSize());
             iv.add(ints[i]);

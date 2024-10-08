@@ -2,8 +2,10 @@ package com.cldellow.manu.format;
 
 import com.cldellow.manu.common.Common;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.generator.InRange;
 import com.pholser.junit.quickcheck.generator.Size;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import junit.framework.AssertionFailedError;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -143,14 +145,47 @@ public class ReaderTest {
         }
     }
 
+    private void testVariableSizes(int[] f1, int[] f2, int[] f3, int[] f4, int encoder) throws Exception {
+        FieldEncoder e;
+        switch (encoder) {
+            case 0:
+                e = new CopyEncoder();
+                break;
+            case 1:
+                e = new PFOREncoder();
+                break;
+            case 2:
+                e = new SingleValueEncoder();
+                f1 = new int[] { f1[0] };
+                f2 = new int[] { f2[0] };
+                f3 = new int[] { f3[0] };
+                f4 = new int[] { f4[0] };
+                break;
+            case 3:
+                e = new AverageEncoder();
+                for (int i = 1 ; i < f1.length ; i++) {
+                    f1[i] = f1[0];
+                    f2[i] = f2[0];
+                    f3[i] = f3[0];
+                    f4[i] = f4[0];
+                }
+            break;
+            default:
+                throw new Error();
+        }
+
+        testVariableSize(f1, f2, f3, f4, e);
+    }
+
     @Property(trials = 5)
     public void testVariableSize512(
             int @Size(min = 512, max = 512) [] f1,
             int @Size(min = 512, max = 512) [] f2,
             int @Size(min = 512, max = 512) [] f3,
-            int @Size(min = 512, max = 512) [] f4
+            int @Size(min = 512, max = 512) [] f4,
+            @InRange(min="0", max="3") int encoder
     ) throws Exception {
-        testVariableSize(f1, f2, f3, f4);
+        testVariableSizes(f1, f2, f3, f4, encoder);
     }
 
     @Property(trials = 5)
@@ -158,9 +193,10 @@ public class ReaderTest {
             int @Size(min = 20480, max = 20480) [] f1,
             int @Size(min = 20480, max = 20480) [] f2,
             int @Size(min = 20480, max = 20480) [] f3,
-            int @Size(min = 20480, max = 20480) [] f4
+            int @Size(min = 20480, max = 20480) [] f4,
+            @InRange(min="0", max="2") int encoder
     ) throws Exception {
-        testVariableSize(f1, f2, f3, f4);
+        testVariableSizes(f1, f2, f3, f4, encoder);
     }
 
     @Test
@@ -188,6 +224,11 @@ public class ReaderTest {
         FieldEncoder encoder = new CopyEncoder();
         if (f1.length == 1)
             encoder = new AverageEncoder();
+
+        testVariableSize(f1, f2, f3, f4, encoder);
+    }
+
+    void testVariableSize(int[] f1, int[] f2, int[] f3, int[] f4, FieldEncoder encoder) throws Exception {
         int[][] values1 = new int[][]{f1, f2};
         SimpleRecord r1 = new SimpleRecord(1, new FieldEncoder[]{encoder, encoder}, values1);
 
